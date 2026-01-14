@@ -123,7 +123,7 @@
     },
     "entity": "Entity to control",
     "icon": "Custom icon (if left empty, changes automatically based on On/Off state)",
-    "percentage": "Show current value (percentage, number with unit, or volume)",
+    "percentage": "Show current value on slider",
     "bold_text": "Bold style for the text"
   },
   "material_lights_card": {
