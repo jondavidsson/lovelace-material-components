@@ -344,7 +344,13 @@ export class MaterialSliderCard extends LitElement {
   }
 
   _updateSlider(): void {
-    this.style.setProperty("--bsc-percent", this.currentValue + "%");
+    // Calculate percentage for slider position based on min/max range
+    const min = this._config.min ?? 0;
+    const max = this._config.max ?? 100;
+    const range = max - min;
+    const sliderPercent = range > 0 ? ((this.currentValue - min) / range) * 100 : 0;
+
+    this.style.setProperty("--bsc-percent", sliderPercent + "%");
     const percentage = this?.shadowRoot?.getElementById("percentage");
 
     if (!percentage) return;
