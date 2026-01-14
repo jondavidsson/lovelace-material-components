@@ -346,24 +346,54 @@ export class MaterialSliderCard extends LitElement {
   _updateSlider(): void {
     this.style.setProperty("--bsc-percent", this.currentValue + "%");
     const percentage = this?.shadowRoot?.getElementById("percentage");
-    if (this._state && this._state.attributes.brightness)
-      percentage &&
-        (percentage.innerText = Math.round(this.currentValue) + "%");
-    else if (
+
+    if (!percentage) return;
+
+    // If show_percentage is disabled, hide the value
+    if (!this._config.show_percentage) {
+      percentage.innerText = "";
+      return;
+    }
+
+    // Handle number entities
+    if (this._config.control_type === ControlType.NUMBER) {
+      const unit = this._state?.attributes?.unit_of_measurement || "";
+      percentage.innerText = Math.round(this.currentValue) + (unit ? " " + unit : "");
+      return;
+    }
+
+    // Handle media player volume
+    if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      percentage.innerText = Math.round(this.currentValue) + "%";
+      return;
+    }
+
+    // Handle lights with brightness
+    if (this._state && this._state.attributes.brightness) {
+      percentage.innerText = Math.round(this.currentValue) + "%";
+      return;
+    }
+
+    // Handle covers
+    if (
       this._config.control_type == ControlType.COVER &&
       this._state &&
       this._state.attributes.current_position
     ) {
       if (this._state.state == OnStates.OPENING) {
-        percentage && (percentage.innerText = localize("common.opening"));
-      } else
-        percentage &&
-          (percentage.innerText =
-            localize("common.open") +
-            " • " +
-            Math.round(this.currentValue) +
-            "%");
-    } else percentage && (percentage.innerText = localize("common.on"));
+        percentage.innerText = localize("common.opening");
+      } else {
+        percentage.innerText =
+          localize("common.open") +
+          " • " +
+          Math.round(this.currentValue) +
+          "%";
+      }
+      return;
+    }
+
+    // Default fallback
+    percentage.innerText = localize("common.on");
   }
 
   _updateColors(): void {
