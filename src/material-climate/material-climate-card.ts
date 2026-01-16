@@ -70,31 +70,79 @@ export class MaterialClimateCard extends LitElement {
     fireEvent(this, "hass-more-info", { entityId });
   }
 
-  private async _adjustTemp(delta: number): Promise<void> {
+  private _isDualTemperatureMode(): boolean {
+    if (!this.hass || !this._config?.entity) return false;
+    const stateObj = this.hass.states[this._config.entity];
+    return (
+      stateObj.attributes.target_temp_low != null &&
+      stateObj.attributes.target_temp_high != null
+    );
+  }
+
+  private async _adjustTemp(delta: number, mode?: 'low' | 'high'): Promise<void> {
     vibrate();
     if (!this.hass || !this._config?.entity) return;
 
     const stateObj = this.hass.states[this._config.entity];
+    const isDualMode = this._isDualTemperatureMode();
 
-    const current = Number(
-      adjustTempAuto(
+    if (isDualMode && mode) {
+      // Dual temperature mode - adjust either low or high
+      const currentLow = Number(
+        adjustTempAuto(
+          this._config.fix_temperature!,
+          stateObj.attributes.target_temp_low
+        )
+      );
+      const currentHigh = Number(
+        adjustTempAuto(
+          this._config.fix_temperature!,
+          stateObj.attributes.target_temp_high
+        )
+      );
+
+      if (isNaN(currentLow) || isNaN(currentHigh)) return;
+
+      const newLow = mode === 'low'
+        ? adjustNewTempAuto(this._config.fix_temperature!, currentLow + delta)
+        : adjustNewTempAuto(this._config.fix_temperature!, currentLow);
+
+      const newHigh = mode === 'high'
+        ? adjustNewTempAuto(this._config.fix_temperature!, currentHigh + delta)
+        : adjustNewTempAuto(this._config.fix_temperature!, currentHigh);
+
+      // Update local state
+      this.hass.states[this._config.entity]!.attributes!.target_temp_low! = newLow;
+      this.hass.states[this._config.entity]!.attributes!.target_temp_high! = newHigh;
+
+      // Call service with both values
+      await this.hass.callService("climate", "set_temperature", {
+        entity_id: this._config.entity,
+        target_temp_low: newLow,
+        target_temp_high: newHigh,
+      });
+    } else {
+      // Single temperature mode
+      const current = Number(
+        adjustTempAuto(
+          this._config.fix_temperature!,
+          stateObj.attributes.temperature
+        )
+      );
+      if (isNaN(current)) return;
+
+      const newTemp = adjustNewTempAuto(
         this._config.fix_temperature!,
-        stateObj.attributes.temperature
-      )
-    );
-    if (isNaN(current)) return;
+        current + delta
+      );
 
-    const newTemp = adjustNewTempAuto(
-      this._config.fix_temperature!,
-      current + delta
-    );
+      this.hass.states[this._config.entity]!.attributes!.temperature! = newTemp;
 
-    this.hass.states[this._config.entity]!.attributes!.temperature! = newTemp;
-
-    await this.hass.callService("climate", "set_temperature", {
-      entity_id: this._config.entity,
-      temperature: newTemp,
-    });
+      await this.hass.callService("climate", "set_temperature", {
+        entity_id: this._config.entity,
+        temperature: newTemp,
+      });
+    }
 
     // Attendi un momento per permettere a HASS di aggiornare lo stato
     setTimeout(() => {
@@ -157,6 +205,8 @@ export class MaterialClimateCard extends LitElement {
       icon_off: this._config.icon_off,
     };
 
+    const isDualMode = this._isDualTemperatureMode();
+
     return html`
       <div class="temperature-card">
         <div class="header" @click=${this._onClick}>
@@ -202,7 +252,89 @@ export class MaterialClimateCard extends LitElement {
                 <div class="temperature-display offline">Offline</div>
               </div>
             `
+          : isDualMode
+          ? html`
+              <!-- Dual temperature mode (min/max) -->
+              <div class="temperature-control-dual">
+                <!-- Low temperature (Heat) -->
+                <div class="temp-group heat">
+                  <button
+                    class="control-btn minus-btn"
+                    @click=${() =>
+                      this._adjustTemp(
+                        -this._config.decrease_temp |
+                          -DEFAULT_CONFIG.decrease_temp,
+                        'low'
+                      )}
+                  >
+                    −
+                  </button>
+                  <div class="temperature-display">
+                    ${this.hass.formatEntityAttributeValue(
+                      stateObj,
+                      "target_temp_low",
+                      adjustTempAuto(
+                        this._config.fix_temperature!,
+                        stateObj.attributes.target_temp_low
+                      )
+                    )}
+                  </div>
+                  <button
+                    class="control-btn plus-btn"
+                    @click=${() =>
+                      this._adjustTemp(
+                        this._config.increase_temp |
+                          DEFAULT_CONFIG.increase_temp,
+                        'low'
+                      )}
+                  >
+                    +
+                  </button>
+                </div>
+
+                <!-- High temperature (Cool) -->
+                <div class="temp-group cool">
+                  <button
+                    class="control-btn minus-btn"
+                    @click=${() =>
+                      this._adjustTemp(
+                        -this._config.decrease_temp |
+                          -DEFAULT_CONFIG.decrease_temp,
+                        'high'
+                      )}
+                  >
+                    −
+                  </button>
+                  <div class="temperature-display">
+                    ${this.hass.formatEntityAttributeValue(
+                      stateObj,
+                      "target_temp_high",
+                      adjustTempAuto(
+                        this._config.fix_temperature!,
+                        stateObj.attributes.target_temp_high
+                      )
+                    )}
+                  </div>
+                  <button
+                    class="control-btn plus-btn"
+                    @click=${() =>
+                      this._adjustTemp(
+                        this._config.increase_temp |
+                          DEFAULT_CONFIG.increase_temp,
+                        'high'
+                      )}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div class="internal-temp">
+                <span id="internalTemp">${stateDisplay}</span>
+              </div>
+            `
           : html`
+              <!-- Single temperature mode -->
               <div
                 class="temperature-control"
                 style="${isOn || isOffAndHasTemperature
@@ -230,20 +362,22 @@ export class MaterialClimateCard extends LitElement {
                     : "font-size: 65px; margin-bottom: 7px;"}"
                 >
                   ${isOn || isOffAndHasTemperature
-                    ? adjustTempAuto(
-                        this._config.fix_temperature!,
-                        stateObj.attributes.temperature
-                      ) //this._config.fix_temperature
-                    : //? stateObj.attributes.temperature * 5
-                      //: stateObj.attributes.temperature
-                      localize("common.off")}
+                    ? this.hass.formatEntityAttributeValue(
+                        stateObj,
+                        "temperature",
+                        adjustTempAuto(
+                          this._config.fix_temperature!,
+                          stateObj.attributes.temperature
+                        )
+                      )
+                    : localize("common.off")}
                 </div>
                 ${isOn || isOffAndHasTemperature
                   ? html`<button
                       class="control-btn plus-btn"
                       @click=${() =>
                         this._adjustTemp(
-                          this._config.decrease_temp |
+                          this._config.increase_temp |
                             DEFAULT_CONFIG.increase_temp
                         )}
                     >
@@ -334,6 +468,26 @@ export class MaterialClimateCard extends LitElement {
       margin-bottom: 15px;
       position: relative;
       z-index: 2;
+    }
+
+    .temperature-control-dual {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 15px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .temp-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .temp-group .temperature-display {
+      font-size: 48px;
+      font-weight: 450;
     }
 
     .control-btn {
