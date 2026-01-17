@@ -254,12 +254,12 @@ export class MaterialClimateCard extends LitElement {
             `
           : isDualMode
           ? html`
-              <!-- Dual temperature mode (min/max) -->
+              <!-- Dual temperature mode (min/max) - side by side -->
               <div class="temperature-control-dual">
                 <!-- Low temperature (Heat) -->
-                <div class="temp-group heat">
+                <div class="temp-group">
                   <button
-                    class="control-btn minus-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         -this._config.decrease_temp |
@@ -269,7 +269,7 @@ export class MaterialClimateCard extends LitElement {
                   >
                     −
                   </button>
-                  <div class="temperature-display">
+                  <div class="temperature-display-dual">
                     ${this.hass.formatEntityAttributeValue(
                       stateObj,
                       "target_temp_low",
@@ -280,7 +280,7 @@ export class MaterialClimateCard extends LitElement {
                     )}
                   </div>
                   <button
-                    class="control-btn plus-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         this._config.increase_temp |
@@ -293,9 +293,9 @@ export class MaterialClimateCard extends LitElement {
                 </div>
 
                 <!-- High temperature (Cool) -->
-                <div class="temp-group cool">
+                <div class="temp-group">
                   <button
-                    class="control-btn minus-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         -this._config.decrease_temp |
@@ -305,7 +305,7 @@ export class MaterialClimateCard extends LitElement {
                   >
                     −
                   </button>
-                  <div class="temperature-display">
+                  <div class="temperature-display-dual">
                     ${this.hass.formatEntityAttributeValue(
                       stateObj,
                       "target_temp_high",
@@ -316,7 +316,7 @@ export class MaterialClimateCard extends LitElement {
                     )}
                   </div>
                   <button
-                    class="control-btn plus-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         this._config.increase_temp |
@@ -472,8 +472,10 @@ export class MaterialClimateCard extends LitElement {
 
     .temperature-control-dual {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 15px;
       position: relative;
       z-index: 2;
@@ -482,12 +484,43 @@ export class MaterialClimateCard extends LitElement {
     .temp-group {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .temp-group .temperature-display {
-      font-size: 48px;
+    .temperature-display-dual {
+      color: var(--bsc-name-color);
+      font-size: 25px;
       font-weight: 450;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .control-btn-dual {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      background: var(--bsc-adjustTemp-color);
+      border: none;
+      color: var(--bsc-name-color);
+      font-size: 22px;
+      font-weight: 300;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .control-btn-dual:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    .control-btn-dual:active {
+      transform: scale(0.98);
     }
 
     .control-btn {
