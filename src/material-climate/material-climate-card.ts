@@ -257,9 +257,9 @@ export class MaterialClimateCard extends LitElement {
               <!-- Dual temperature mode (min/max) - side by side -->
               <div class="temperature-control-dual">
                 <!-- Low temperature (Heat) -->
-                <div class="temp-group heat">
+                <div class="temp-group">
                   <button
-                    class="control-btn-dual heat-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         -this._config.decrease_temp |
@@ -280,7 +280,7 @@ export class MaterialClimateCard extends LitElement {
                     )}
                   </div>
                   <button
-                    class="control-btn-dual heat-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         this._config.increase_temp |
@@ -293,9 +293,9 @@ export class MaterialClimateCard extends LitElement {
                 </div>
 
                 <!-- High temperature (Cool) -->
-                <div class="temp-group cool">
+                <div class="temp-group">
                   <button
-                    class="control-btn-dual cool-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         -this._config.decrease_temp |
@@ -316,7 +316,7 @@ export class MaterialClimateCard extends LitElement {
                     )}
                   </div>
                   <button
-                    class="control-btn-dual cool-btn"
+                    class="control-btn-dual"
                     @click=${() =>
                       this._adjustTemp(
                         this._config.increase_temp |
@@ -497,35 +497,30 @@ export class MaterialClimateCard extends LitElement {
     }
 
     .control-btn-dual {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: transparent;
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      background: var(--bsc-adjustTemp-color);
       border: none;
-      font-size: 24px;
-      font-weight: 400;
+      color: var(--bsc-name-color);
+      font-size: 22px;
+      font-weight: 300;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
+      backdrop-filter: blur(10px);
       -webkit-tap-highlight-color: transparent;
     }
 
     .control-btn-dual:hover {
-      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
     }
 
     .control-btn-dual:active {
-      transform: scale(0.95);
-    }
-
-    .heat-btn {
-      color: var(--state-climate-heat-color, var(--deep-orange-color, var(--orange-color, #ff9800)));
-    }
-
-    .cool-btn {
-      color: var(--state-climate-cool-color, var(--light-blue-color, var(--cyan-color, #03a9f4)));
+      transform: scale(0.98);
     }
 
     .control-btn {
