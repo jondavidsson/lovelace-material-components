@@ -2096,21 +2096,21 @@ function rn(t){return null==t}sn.styles=s`
                 <div class="temperature-display offline">Offline</div>
               </div>
             `:p?H`
-              <!-- Dual temperature mode (min/max) -->
+              <!-- Dual temperature mode (min/max) - side by side -->
               <div class="temperature-control-dual">
                 <!-- Low temperature (Heat) -->
                 <div class="temp-group heat">
                   <button
-                    class="control-btn minus-btn"
+                    class="control-btn-dual heat-btn"
                     @click=${()=>this._adjustTemp(-this._config.decrease_temp|-wa.decrease_temp,"low")}
                   >
                     −
                   </button>
-                  <div class="temperature-display">
+                  <div class="temperature-display-dual">
                     ${this.hass.formatEntityAttributeValue(n,"target_temp_low",xi(this._config.fix_temperature,n.attributes.target_temp_low))}
                   </div>
                   <button
-                    class="control-btn plus-btn"
+                    class="control-btn-dual heat-btn"
                     @click=${()=>this._adjustTemp(this._config.increase_temp|wa.increase_temp,"low")}
                   >
                     +
@@ -2120,16 +2120,16 @@ function rn(t){return null==t}sn.styles=s`
                 <!-- High temperature (Cool) -->
                 <div class="temp-group cool">
                   <button
-                    class="control-btn minus-btn"
+                    class="control-btn-dual cool-btn"
                     @click=${()=>this._adjustTemp(-this._config.decrease_temp|-wa.decrease_temp,"high")}
                   >
                     −
                   </button>
-                  <div class="temperature-display">
+                  <div class="temperature-display-dual">
                     ${this.hass.formatEntityAttributeValue(n,"target_temp_high",xi(this._config.fix_temperature,n.attributes.target_temp_high))}
                   </div>
                   <button
-                    class="control-btn plus-btn"
+                    class="control-btn-dual cool-btn"
                     @click=${()=>this._adjustTemp(this._config.increase_temp|wa.increase_temp,"high")}
                   >
                     +
@@ -2251,8 +2251,10 @@ function rn(t){return null==t}sn.styles=s`
 
     .temperature-control-dual {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 15px;
       position: relative;
       z-index: 2;
@@ -2261,12 +2263,48 @@ function rn(t){return null==t}sn.styles=s`
     .temp-group {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .temp-group .temperature-display {
-      font-size: 48px;
+    .temperature-display-dual {
+      color: var(--bsc-name-color);
+      font-size: 25px;
       font-weight: 450;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .control-btn-dual {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .control-btn-dual:hover {
+      transform: scale(1.1);
+    }
+
+    .control-btn-dual:active {
+      transform: scale(0.95);
+    }
+
+    .heat-btn {
+      color: var(--state-climate-heat-color, var(--deep-orange-color, var(--orange-color, #ff9800)));
+    }
+
+    .cool-btn {
+      color: var(--state-climate-cool-color, var(--light-blue-color, var(--cyan-color, #03a9f4)));
     }
 
     .control-btn {
