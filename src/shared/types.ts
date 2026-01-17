@@ -151,3 +151,21 @@ export function getValidDeviceClass(
 
   return undefined;
 }
+
+/**
+ * -----------------------------------------------------------------------
+ * Additional Enums Used in Material Options Card
+ * -----------------------------------------------------------------------
+ */
+
+/**
+ * Enum representing supported options classes (Used to show different option cards).
+ */
+export enum OptionType {
+  OPTIONS = "options",
+}
+
+export enum EntityOptions {
+  STATES = "states",
+  RUN = "run",
+}
