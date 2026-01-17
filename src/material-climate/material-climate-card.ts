@@ -498,8 +498,8 @@ export class MaterialClimateCard extends LitElement {
 
     .control-btn-dual {
       width: 40px;
-      height: 40px;
-      border-radius: 20px;
+      height: 28px;
+      border-radius: 15px;
       background: var(--bsc-adjustTemp-color);
       border: none;
       color: var(--bsc-name-color);
@@ -512,6 +512,8 @@ export class MaterialClimateCard extends LitElement {
       justify-content: center;
       backdrop-filter: blur(10px);
       -webkit-tap-highlight-color: transparent;
+      line-height: 1;
+      padding-bottom: 5px;
     }
 
     .control-btn-dual:hover {

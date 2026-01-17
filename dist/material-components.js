@@ -2104,16 +2104,16 @@ function kn(t){return null==t}An.styles=s`
                 <div class="temp-group">
                   <button
                     class="control-btn-dual"
-                    @click=${()=>this._adjustTemp(-this._config.decrease_temp|-Fa.decrease_temp,"low")}
+                    @click=${()=>this._adjustTemp(-this._config.decrease_temp|-wa.decrease_temp,"low")}
                   >
                     −
                   </button>
                   <div class="temperature-display-dual">
-                    ${this.hass.formatEntityAttributeValue(n,"target_temp_low",Di(this._config.fix_temperature,n.attributes.target_temp_low))}
+                    ${this.hass.formatEntityAttributeValue(n,"target_temp_low",xi(this._config.fix_temperature,n.attributes.target_temp_low))}
                   </div>
                   <button
                     class="control-btn-dual"
-                    @click=${()=>this._adjustTemp(this._config.increase_temp|Fa.increase_temp,"low")}
+                    @click=${()=>this._adjustTemp(this._config.increase_temp|wa.increase_temp,"low")}
                   >
                     +
                   </button>
@@ -2123,16 +2123,16 @@ function kn(t){return null==t}An.styles=s`
                 <div class="temp-group">
                   <button
                     class="control-btn-dual"
-                    @click=${()=>this._adjustTemp(-this._config.decrease_temp|-Fa.decrease_temp,"high")}
+                    @click=${()=>this._adjustTemp(-this._config.decrease_temp|-wa.decrease_temp,"high")}
                   >
                     −
                   </button>
                   <div class="temperature-display-dual">
-                    ${this.hass.formatEntityAttributeValue(n,"target_temp_high",Di(this._config.fix_temperature,n.attributes.target_temp_high))}
+                    ${this.hass.formatEntityAttributeValue(n,"target_temp_high",xi(this._config.fix_temperature,n.attributes.target_temp_high))}
                   </div>
                   <button
                     class="control-btn-dual"
-                    @click=${()=>this._adjustTemp(this._config.increase_temp|Fa.increase_temp,"high")}
+                    @click=${()=>this._adjustTemp(this._config.increase_temp|wa.increase_temp,"high")}
                   >
                     +
                   </button>
@@ -2279,8 +2279,8 @@ function kn(t){return null==t}An.styles=s`
 
     .control-btn-dual {
       width: 40px;
-      height: 40px;
-      border-radius: 20px;
+      height: 28px;
+      border-radius: 15px;
       background: var(--bsc-adjustTemp-color);
       border: none;
       color: var(--bsc-name-color);
@@ -2293,6 +2293,8 @@ function kn(t){return null==t}An.styles=s`
       justify-content: center;
       backdrop-filter: blur(10px);
       -webkit-tap-highlight-color: transparent;
+      line-height: 1;
+      padding-bottom: 5px;
     }
 
     .control-btn-dual:hover {
