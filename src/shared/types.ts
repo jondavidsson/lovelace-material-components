@@ -35,6 +35,12 @@ export enum ControlType {
 
   /** Used for cover entities (e.g., blinds, curtains, garage doors) */
   COVER = "cover",
+
+  /** Used for number entities (input_number, number helpers with min/max) */
+  NUMBER = "number",
+
+  /** Used for media player volume control */
+  MEDIA_PLAYER_VOLUME = "media_player_volume",
 }
 
 /**

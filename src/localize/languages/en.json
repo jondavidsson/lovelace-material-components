@@ -117,11 +117,13 @@
     "control_type": "Control Type",
     "type": {
       "light": "Light",
-      "cover": "Cover"
+      "cover": "Cover",
+      "number": "Number (input_number, number)",
+      "media_player_volume": "Media Player Volume"
     },
     "entity": "Entity to control",
     "icon": "Custom icon (if left empty, changes automatically based on On/Off state)",
-    "percentage": "Display value as percentage",
+    "percentage": "Show current value on slider",
     "bold_text": "Bold style for the text"
   },
   "material_lights_card": {

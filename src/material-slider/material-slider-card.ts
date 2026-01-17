@@ -92,7 +92,11 @@ export class MaterialSliderCard extends LitElement {
     if (
       (config.control_type === ControlType.LIGHT &&
         domain !== DomainType.LIGHT) ||
-      (config.control_type === ControlType.COVER && domain !== DomainType.COVER)
+      (config.control_type === ControlType.COVER && domain !== DomainType.COVER) ||
+      (config.control_type === ControlType.NUMBER &&
+        domain !== "input_number" && domain !== DomainType.NUMBER) ||
+      (config.control_type === ControlType.MEDIA_PLAYER_VOLUME &&
+        domain !== "media_player")
     ) {
       throw new Error(
         `Entity must match the selected control type (${config.control_type})`
@@ -340,26 +344,62 @@ export class MaterialSliderCard extends LitElement {
   }
 
   _updateSlider(): void {
-    this.style.setProperty("--bsc-percent", this.currentValue + "%");
+    // Calculate percentage for slider position based on min/max range
+    const min = this._config.min ?? 0;
+    const max = this._config.max ?? 100;
+    const range = max - min;
+    const sliderPercent = range > 0 ? ((this.currentValue - min) / range) * 100 : 0;
+
+    this.style.setProperty("--bsc-percent", sliderPercent + "%");
     const percentage = this?.shadowRoot?.getElementById("percentage");
-    if (this._state && this._state.attributes.brightness)
-      percentage &&
-        (percentage.innerText = Math.round(this.currentValue) + "%");
-    else if (
+
+    if (!percentage) return;
+
+    // If show_percentage is disabled, hide the value
+    if (!this._config.show_percentage) {
+      percentage.innerText = "";
+      return;
+    }
+
+    // Handle number entities
+    if (this._config.control_type === ControlType.NUMBER) {
+      const unit = this._state?.attributes?.unit_of_measurement || "";
+      percentage.innerText = Math.round(this.currentValue) + (unit ? " " + unit : "");
+      return;
+    }
+
+    // Handle media player volume
+    if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      percentage.innerText = Math.round(this.currentValue) + "%";
+      return;
+    }
+
+    // Handle lights with brightness
+    if (this._state && this._state.attributes.brightness) {
+      percentage.innerText = Math.round(this.currentValue) + "%";
+      return;
+    }
+
+    // Handle covers
+    if (
       this._config.control_type == ControlType.COVER &&
       this._state &&
       this._state.attributes.current_position
     ) {
       if (this._state.state == OnStates.OPENING) {
-        percentage && (percentage.innerText = localize("common.opening"));
-      } else
-        percentage &&
-          (percentage.innerText =
-            localize("common.open") +
-            " • " +
-            Math.round(this.currentValue) +
-            "%");
-    } else percentage && (percentage.innerText = localize("common.on"));
+        percentage.innerText = localize("common.opening");
+      } else {
+        percentage.innerText =
+          localize("common.open") +
+          " • " +
+          Math.round(this.currentValue) +
+          "%";
+      }
+      return;
+    }
+
+    // Default fallback
+    percentage.innerText = localize("common.on");
   }
 
   _updateColors(): void {
@@ -415,7 +455,7 @@ export class MaterialSliderCard extends LitElement {
     if (!this._shouldUpdate) return;
     if (!this._state) return;
 
-    // Se è una cover → leggiamo direttamente la posizione
+    // Handle cover entities
     if (this._config.control_type === ControlType.COVER) {
       this._config.min = 0;
       this._config.max = 100;
@@ -426,6 +466,44 @@ export class MaterialSliderCard extends LitElement {
       } else {
         this.style.removeProperty("--bsc-opacity");
         this.currentValue = this._state.attributes.current_position ?? 0;
+      }
+
+      this._updateSlider();
+      return;
+    }
+
+    // Handle number entities (input_number, number)
+    if (this._config.control_type === ControlType.NUMBER) {
+      const min = this._state.attributes.min ?? 0;
+      const max = this._state.attributes.max ?? 100;
+      this._config.min = min;
+      this._config.max = max;
+
+      if (this._status == "unavailable") {
+        this.currentValue = min;
+        this.style.setProperty("--bsc-opacity", "0.5");
+      } else {
+        this.style.removeProperty("--bsc-opacity");
+        const value = parseFloat(this._state.state);
+        this.currentValue = Number.isNaN(value) ? min : Math.max(min, Math.min(max, value));
+      }
+
+      this._updateSlider();
+      return;
+    }
+
+    // Handle media player volume
+    if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      this._config.min = 0;
+      this._config.max = 100;
+
+      if (this._status == "unavailable") {
+        this.currentValue = 0;
+        this.style.setProperty("--bsc-opacity", "0.5");
+      } else {
+        this.style.removeProperty("--bsc-opacity");
+        const volumeLevel = this._state.attributes.volume_level ?? 0;
+        this.currentValue = Math.round(volumeLevel * 100);
       }
 
       this._updateSlider();
@@ -480,11 +558,34 @@ export class MaterialSliderCard extends LitElement {
   _setValue(): void {
     if (!this._state) return;
 
-    // Se è una cover → gestiamo direttamente la posizione
+    // Handle cover entities
     if (this._config.control_type === ControlType.COVER) {
       this._hass!.callService("cover", "set_cover_position", {
         entity_id: this._state.entity_id,
         position: this.currentValue,
+      });
+      return;
+    }
+
+    // Handle number entities (input_number, number)
+    if (this._config.control_type === ControlType.NUMBER) {
+      const domain = this._state.entity_id.split(".")[0];
+      const service = domain === "input_number" ? "input_number" : "number";
+
+      this._hass!.callService(service, "set_value", {
+        entity_id: this._state.entity_id,
+        value: this.currentValue,
+      });
+      return;
+    }
+
+    // Handle media player volume
+    if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      const volumeLevel = Math.max(0, Math.min(1, this.currentValue / 100));
+
+      this._hass!.callService("media_player", "volume_set", {
+        entity_id: this._state.entity_id,
+        volume_level: parseFloat(volumeLevel.toFixed(2)),
       });
       return;
     }

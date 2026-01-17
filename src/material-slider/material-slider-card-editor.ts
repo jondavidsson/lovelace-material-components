@@ -36,6 +36,10 @@ export class MaterialSliderCardEditor
         return ["light"];
       case ControlType.COVER:
         return ["cover"];
+      case ControlType.NUMBER:
+        return ["input_number", "number"];
+      case ControlType.MEDIA_PLAYER_VOLUME:
+        return ["media_player"];
       default:
         return undefined;
     }
@@ -62,6 +66,12 @@ export class MaterialSliderCardEditor
           </mwc-list-item>
           <mwc-list-item value="cover">
             ${localize("material_slider_card.type.cover")}
+          </mwc-list-item>
+          <mwc-list-item value="number">
+            ${localize("material_slider_card.type.number")}
+          </mwc-list-item>
+          <mwc-list-item value="media_player_volume">
+            ${localize("material_slider_card.type.media_player_volume")}
           </mwc-list-item>
         </ha-select>
 
