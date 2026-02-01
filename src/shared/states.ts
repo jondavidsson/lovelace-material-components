@@ -11,6 +11,9 @@ export enum OnStates {
   // Lights
   ON = "on",
 
+  // Lock
+  LOCKED = "locked",
+
   // Climate modes
   AUTO = "auto",
   HEAT = "heat",
