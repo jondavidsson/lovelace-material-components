@@ -36,15 +36,47 @@ export class MaterialSliderCardEditor
         return ["light"];
       case ControlType.COVER:
         return ["cover"];
+      case ControlType.NUMBER:
+        return ["number"];
+      case ControlType.INPUT_NUMBER:
+        return ["input_number"];
+      case ControlType.MEDIA_PLAYER_VOLUME:
+        return ["media_player"];
+      case ControlType.FAN:
+        return ["fan"];
+      case ControlType.CLIMATE:
+        return ["climate"];
       default:
         return undefined;
     }
+  }
+
+  /**
+   * Get localized domain name using HA's internal localization
+   * Falls back to capitalized domain name if not available
+   */
+  private _getDomainName(domain: string): string {
+    const translated = this.hass.localize(`component.${domain}.title`);
+    if (translated && translated !== `component.${domain}.title`) {
+      return translated;
+    }
+    // Fallback: capitalize and replace underscores
+    return domain.charAt(0).toUpperCase() + domain.slice(1).replace(/_/g, " ");
   }
 
   render(): TemplateResult {
     if (!this._config || !this.hass) {
       return html``;
     }
+
+    // Get localized domain names
+    const lightName = this._getDomainName("light");
+    const coverName = this._getDomainName("cover");
+    const numberName = this._getDomainName("number");
+    const inputNumberName = this._getDomainName("input_number");
+    const mediaPlayerName = this._getDomainName("media_player");
+    const fanName = this._getDomainName("fan");
+    const climateName = this._getDomainName("climate");
 
     return html`
       <div class="form">
@@ -56,10 +88,25 @@ export class MaterialSliderCardEditor
           @closed=${(ev: Event) => ev.stopPropagation()}
         >
           <mwc-list-item value="light">
-            ${localize("material_slider_card.type.light")}
+            ${lightName}
           </mwc-list-item>
           <mwc-list-item value="cover">
-            ${localize("material_slider_card.type.cover")}
+            ${coverName}
+          </mwc-list-item>
+          <mwc-list-item value="number">
+            ${numberName}
+          </mwc-list-item>
+          <mwc-list-item value="input_number">
+            ${inputNumberName}
+          </mwc-list-item>
+          <mwc-list-item value="media_player_volume">
+            ${mediaPlayerName}
+          </mwc-list-item>
+          <mwc-list-item value="fan">
+            ${fanName}
+          </mwc-list-item>
+          <mwc-list-item value="climate">
+            ${climateName}
           </mwc-list-item>
         </ha-select>
 
