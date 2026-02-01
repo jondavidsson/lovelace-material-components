@@ -541,7 +541,7 @@ export class MaterialButtonCard extends LitElement {
           : "padding: 12px 12px"}"
       >
         <div class="content">
-          ${icon ? html`<ha-icon .icon=${icon} class="icon"></ha-icon>` : html`<ha-state-icon .stateObj=${stateObj} class="icon"></ha-state-icon>`}
+          ${icon ? html`<ha-icon .icon=${icon} class="icon"></ha-icon>` : html`<ha-state-icon .stateObj=${stateObj} .hass=${this.hass} class="icon"></ha-state-icon>`}
           <div class="text">
             <div class="name ellipsis">${name}</div>
             ${device_class == DeviceType.MEASUREMENT ||

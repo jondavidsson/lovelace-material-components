@@ -24,6 +24,7 @@ const DOMAIN_ICONS: Record<string, { on: string; off: string }> = {
   [DomainType.SWITCH]: { on: "m3rf:switch", off: "m3r:switch" },
   [DomainType.NUMBER]: { on: "m3rf:settings-input-component", off: "m3r:settings-input-component" },
   [DomainType.FAN]: { on: "m3of:mode-fan", off: "m3o:mode-fan" },
+  lock: { on: "m3rf:lock", off: "m3r:lock-open" },
 };
 
 /**
