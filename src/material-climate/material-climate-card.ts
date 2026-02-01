@@ -187,6 +187,7 @@ export class MaterialClimateCard extends LitElement {
                 ></ha-icon>`
               : html`<ha-state-icon
                   .stateObj=${stateObj}
+                  .hass=${this.hass}
                   title="Climate"
                   class="chevron"
                   style="
