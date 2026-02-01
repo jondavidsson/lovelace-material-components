@@ -668,7 +668,7 @@ export class MaterialSliderCard extends LitElement {
         <div id="content">
           <ha-state-icon
             id="icon"
-            .icon=${iconName}
+            .icon=${iconName || undefined}
             .state=${this._state}
             .hass=${this._hass}
             .stateObj=${this._state}

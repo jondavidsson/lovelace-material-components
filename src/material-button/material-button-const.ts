@@ -10,6 +10,7 @@ export interface MaterialButtonCardConfig extends LovelaceCardConfig {
   entity?: string;
   attribute?: string;
   use_default_icon?: boolean;
+  use_material_icons?: boolean;
   icon?: string;
   dual_icon?: boolean;
   icon_on?: string;

@@ -8,6 +8,7 @@ export interface MaterialClimateCardConfig extends LovelaceCardConfig {
   decrease_temp: number;
   use_material_color: boolean;
   use_default_icon?: boolean;
+  use_material_icons?: boolean;
   icon?: string;
   fix_temperature?: "true" | "false" | "auto";
 }

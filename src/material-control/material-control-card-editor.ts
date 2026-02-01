@@ -215,6 +215,21 @@ export class MaterialControlCardEditor
           />
         </div>
 
+        ${this._config.use_default_icon
+          ? html`
+              <div class="switch-row">
+                <span class="switch-label"
+                  >${localize("material_control_card.use_material_icons") ?? "Use Material Icons"}</span
+                >
+                <ha-switch
+                  .checked=${this._config.use_material_icons ?? true}
+                  configValue="use_material_icons"
+                  @change=${(ev: Event) => _valueChanged(ev, this)}
+                />
+              </div>
+            `
+          : ""}
+
         ${!this._config.use_default_icon
           ? html`
               <div class="switch-row">

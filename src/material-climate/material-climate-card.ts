@@ -174,16 +174,26 @@ export class MaterialClimateCard extends LitElement {
       <div class="temperature-card">
         <div class="header" @click=${this._onClick}>
           <div class="valve-info">
-            <ha-icon
-              id="icon_offline"
-              icon="${getIcon(stateObj, config, this.hass)}"
-              title="Climate"
-              class="chevron"
-              style="
-                --mdc-icon-size: 20px;
-                margin-top: -5px;
-              "
-            ></ha-icon>
+            ${getIcon(stateObj, config, this.hass)
+              ? html`<ha-icon
+                  id="icon_offline"
+                  icon="${getIcon(stateObj, config, this.hass)}"
+                  title="Climate"
+                  class="chevron"
+                  style="
+                    --mdc-icon-size: 20px;
+                    margin-top: -5px;
+                  "
+                ></ha-icon>`
+              : html`<ha-state-icon
+                  .stateObj=${stateObj}
+                  title="Climate"
+                  class="chevron"
+                  style="
+                    --mdc-icon-size: 20px;
+                    margin-top: -5px;
+                  "
+                ></ha-state-icon>`}
 
             <span class="valve-name">${name}</span>
           </div>

@@ -457,7 +457,7 @@ export class MaterialButtonCard extends LitElement {
 
     let isOn: boolean = false;
     let name: string = this._config.name ?? "";
-    let icon: string = this._config.icon ?? "";
+    let icon: string | null = this._config.icon ?? "";
     let isOffline: boolean = false;
     let device_class: DeviceType = DeviceType.NONE;
     let stateDisplay: string;
@@ -541,7 +541,7 @@ export class MaterialButtonCard extends LitElement {
           : "padding: 12px 12px"}"
       >
         <div class="content">
-          <ha-icon .icon=${icon} class="icon"></ha-icon>
+          ${icon ? html`<ha-icon .icon=${icon} class="icon"></ha-icon>` : html`<ha-state-icon .stateObj=${stateObj} class="icon"></ha-state-icon>`}
           <div class="text">
             <div class="name ellipsis">${name}</div>
             ${device_class == DeviceType.MEASUREMENT ||

@@ -81,7 +81,18 @@ export class MaterialClimateCardEditor
         </div>
 
         ${this._config.use_default_icon
-          ? html``
+          ? html`
+              <div class="switch-row">
+                <span class="switch-label"
+                  >${localize("material_climate_card.use_material_icons") ?? "Use Material Icons"}</span
+                >
+                <ha-switch
+                  .checked=${this._config.use_material_icons ?? true}
+                  configValue="use_material_icons"
+                  @change=${(ev: Event) => _valueChanged(ev, this)}
+                />
+              </div>
+            `
           : html`
               <ha-icon-picker
                 label="Icon"
