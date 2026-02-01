@@ -24,7 +24,7 @@ const DOMAIN_ICONS: Record<string, { on: string; off: string }> = {
   [DomainType.SWITCH]: { on: "m3rf:switch", off: "m3r:switch" },
   [DomainType.NUMBER]: { on: "m3rf:settings-input-component", off: "m3r:settings-input-component" },
   [DomainType.FAN]: { on: "m3of:mode-fan", off: "m3o:mode-fan" },
-  lock: { on: "m3rf:lock", off: "m3r:lock-open" },
+  lock: { on: "m3of:lock", off: "m3o:lock-open" },
 };
 
 /**
@@ -84,13 +84,13 @@ const GOOGLE_DEVICE_ICONS: Record<string, { on: string; off: string }> = {
 function getBatteryIcon(level: number, isOnline: boolean): string {
   if (!isOnline) return "m3r:battery-android-alert";
 
-  if (level >= 90) return "m3of:battery-android-0";
-  if (level >= 70) return "m3of:battery-android-5";
-  if (level >= 50) return "m3of:battery-android-4";
-  if (level >= 30) return "m3of:battery-android-3";
-  if (level >= 10) return "m3of:battery-android-2";
-  if (level >= 5) return "m3of:battery-android-1";
-  return "m3of:battery-android-0";
+  if (level >= 90) return "m3rf:battery-android-0";
+  if (level >= 70) return "m3rf:battery-android-5";
+  if (level >= 50) return "m3rf:battery-android-4";
+  if (level >= 30) return "m3rf:battery-android-3";
+  if (level >= 10) return "m3rf:battery-android-2";
+  if (level >= 5) return "m3rf:battery-android-1";
+  return "m3rf:battery-android-0";
 }
 
 /**
