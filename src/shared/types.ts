@@ -35,6 +35,21 @@ export enum ControlType {
 
   /** Used for cover entities (e.g., blinds, curtains, garage doors) */
   COVER = "cover",
+
+  /** Used for number entities (e.g., sliders, numeric inputs) */
+  NUMBER = "number",
+
+  /** Used for input_number entities (legacy HA helpers) */
+  INPUT_NUMBER = "input_number",
+
+  /** Used for media player volume control */
+  MEDIA_PLAYER_VOLUME = "media_player_volume",
+
+  /** Used for fan speed control (0-100%) */
+  FAN = "fan",
+
+  /** Used for climate temperature control */
+  CLIMATE = "climate",
 }
 
 /**
@@ -51,8 +66,10 @@ export enum DomainType {
   COVER = "cover",
   BUTTON = "button",
   NUMBER = "number",
+  INPUT_NUMBER = "input_number",
   FAN = "fan",
   CLIMATE = "climate",
+  MEDIA_PLAYER = "media_player",
 }
 
 /**

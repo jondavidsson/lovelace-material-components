@@ -91,7 +91,18 @@ export class MaterialSliderCard extends LitElement {
     if (
       (config.control_type === ControlType.LIGHT &&
         domain !== DomainType.LIGHT) ||
-      (config.control_type === ControlType.COVER && domain !== DomainType.COVER)
+      (config.control_type === ControlType.COVER &&
+        domain !== DomainType.COVER) ||
+      (config.control_type === ControlType.NUMBER &&
+        domain !== DomainType.NUMBER) ||
+      (config.control_type === ControlType.INPUT_NUMBER &&
+        domain !== DomainType.INPUT_NUMBER) ||
+      (config.control_type === ControlType.MEDIA_PLAYER_VOLUME &&
+        domain !== DomainType.MEDIA_PLAYER) ||
+      (config.control_type === ControlType.FAN &&
+        domain !== DomainType.FAN) ||
+      (config.control_type === ControlType.CLIMATE &&
+        domain !== DomainType.CLIMATE)
     ) {
       throw new Error(
         `Entity must match the selected control type (${config.control_type})`,
@@ -109,6 +120,16 @@ export class MaterialSliderCard extends LitElement {
         finalConfig.attribute = "brightness";
       } else if (finalConfig.control_type === ControlType.COVER) {
         finalConfig.attribute = "current_position";
+      } else if (finalConfig.control_type === ControlType.NUMBER) {
+        finalConfig.attribute = "value";
+      } else if (finalConfig.control_type === ControlType.INPUT_NUMBER) {
+        finalConfig.attribute = "value";
+      } else if (finalConfig.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+        finalConfig.attribute = "volume_level";
+      } else if (finalConfig.control_type === ControlType.FAN) {
+        finalConfig.attribute = "percentage";
+      } else if (finalConfig.control_type === ControlType.CLIMATE) {
+        finalConfig.attribute = "temperature";
       }
     }
 
@@ -132,6 +153,27 @@ export class MaterialSliderCard extends LitElement {
       this.currentValue = Math.round((100 * brightness) / 255); // ← Converte 0-255 → 0-100
     } else if (this._config.control_type === ControlType.COVER) {
       this.currentValue = this._state?.attributes?.current_position ?? 0;
+    } else if (this._config.control_type === ControlType.NUMBER || this._config.control_type === ControlType.INPUT_NUMBER) {
+      // Number entities have min/max/step in attributes
+      const value = parseFloat(this._state?.state ?? "0");
+      const min = this._state?.attributes?.min ?? 0;
+      const max = this._state?.attributes?.max ?? 100;
+      // Normalize to 0-100 percentage
+      this.currentValue = Math.round(((value - min) / (max - min)) * 100);
+    } else if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      // Volume is 0.0 - 1.0, convert to 0-100
+      const volume = this._state?.attributes?.volume_level ?? 0;
+      this.currentValue = Math.round(volume * 100);
+    } else if (this._config.control_type === ControlType.FAN) {
+      // Fan percentage is 0-100, only read if entity is on
+      const percentage = this._status === "on" ? (this._state?.attributes?.percentage ?? 0) : 0;
+      this.currentValue = percentage;
+    } else if (this._config.control_type === ControlType.CLIMATE) {
+      // Climate temperature - normalize to 0-100 based on min/max temp
+      const temp = this._state?.attributes?.temperature ?? this._state?.attributes?.min_temp ?? 0;
+      const minTemp = this._state?.attributes?.min_temp ?? 7;
+      const maxTemp = this._state?.attributes?.max_temp ?? 35;
+      this.currentValue = Math.round(((temp - minTemp) / (maxTemp - minTemp)) * 100);
     }
 
     this._name =
@@ -402,24 +444,82 @@ export class MaterialSliderCard extends LitElement {
   _updateSlider(): void {
     this.style.setProperty("--bsc-percent", this.currentValue + "%");
     const percentage = this?.shadowRoot?.getElementById("percentage");
-    if (this._state && this._state.attributes.brightness)
+
+    // Light with brightness
+    if (this._state && this._state.attributes.brightness) {
       percentage &&
         (percentage.innerText = Math.round(this.currentValue) + "%");
+    }
+    // Cover
     else if (
       this._config.control_type == ControlType.COVER &&
       this._state &&
       this._state.attributes.current_position
     ) {
       if (this._state.state == OnStates.OPENING) {
-        percentage && (percentage.innerText = localize("common.opening"));
-      } else
+        percentage && (percentage.innerText = this._getStateText("opening"));
+      } else {
         percentage &&
           (percentage.innerText =
-            localize("common.open") +
+            this._getStateText("open") +
             " • " +
             Math.round(this.currentValue) +
             "%");
-    } else percentage && (percentage.innerText = localize("common.on"));
+      }
+    }
+    // Number entity - show actual value with unit
+    else if ((this._config.control_type == ControlType.NUMBER || this._config.control_type == ControlType.INPUT_NUMBER) && this._state) {
+      const min = this._state.attributes?.min ?? 0;
+      const max = this._state.attributes?.max ?? 100;
+      const actualValue = min + (this.currentValue / 100) * (max - min);
+      const unit = this._state.attributes?.unit_of_measurement ?? "";
+      const step = this._state.attributes?.step ?? 1;
+      // Format based on step precision
+      const decimals = step < 1 ? Math.ceil(-Math.log10(step)) : 0;
+      const formattedValue = actualValue.toFixed(decimals);
+      percentage && (percentage.innerText = `${formattedValue}${unit ? " " + unit : ""}`);
+    }
+    // Media player volume
+    else if (this._config.control_type == ControlType.MEDIA_PLAYER_VOLUME && this._state) {
+      percentage && (percentage.innerText = Math.round(this.currentValue) + "%");
+    }
+    // Fan - show percentage
+    else if (this._config.control_type == ControlType.FAN && this._state) {
+      percentage && (percentage.innerText = Math.round(this.currentValue) + "%");
+    }
+    // Climate - show actual temperature
+    else if (this._config.control_type == ControlType.CLIMATE && this._state) {
+      const minTemp = this._state.attributes?.min_temp ?? 7;
+      const maxTemp = this._state.attributes?.max_temp ?? 35;
+      const actualTemp = minTemp + (this.currentValue / 100) * (maxTemp - minTemp);
+      const unit = this._hass?.config?.unit_system?.temperature ?? "°C";
+      // Climate usually uses 0.5 step
+      const step = this._state.attributes?.target_temp_step ?? 0.5;
+      const decimals = step < 1 ? 1 : 0;
+      percentage && (percentage.innerText = `${actualTemp.toFixed(decimals)} ${unit}`);
+    }
+    // Default
+    else {
+      percentage && (percentage.innerText = this._getStateText("on"));
+    }
+  }
+
+  /**
+   * Get localized state text using HA's internal localization
+   * Falls back to custom localize() if HA localization is not available
+   */
+  private _getStateText(state: string): string {
+    if (this._hass?.localize) {
+      const domain = this._entity?.split(".")[0] ?? "cover";
+      // Try domain-specific translation first
+      const translationKey = `component.${domain}.entity_component._.state.${state}`;
+      const translated = this._hass.localize(translationKey);
+      if (translated && translated !== translationKey) {
+        return translated;
+      }
+    }
+    // Fallback to custom localize
+    return localize(`common.${state}`);
   }
 
   _updateColors(): void {
@@ -442,6 +542,16 @@ export class MaterialSliderCard extends LitElement {
         }
       } else if (this._status == OnStates.OPEN) {
         isOn = true;
+      } else if (
+        // Number, input_number, media_player, fan, climate are considered "on" if not unavailable
+        (this._config.control_type === ControlType.NUMBER ||
+          this._config.control_type === ControlType.INPUT_NUMBER ||
+          this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME ||
+          this._config.control_type === ControlType.FAN ||
+          this._config.control_type === ControlType.CLIMATE) &&
+        !isOfflineState(this._status!)
+      ) {
+        isOn = true;
       } else {
         color = "var(--bsc-off-color)";
       }
@@ -453,12 +563,12 @@ export class MaterialSliderCard extends LitElement {
       const isOffline = isOfflineState(this._status!);
       if (!isOffline) {
         if (this._status == OffStates.OFF)
-          percentage && (percentage.innerText = localize("common.off"));
+          percentage && (percentage.innerText = this._getStateText("off"));
         if (this._status == OffStates.CLOSED)
-          percentage && (percentage.innerText = localize("common.closed"));
+          percentage && (percentage.innerText = this._getStateText("closed"));
         if (this._status == OffStates.CLOSING)
-          percentage && (percentage.innerText = localize("common.closing"));
-      } else percentage && (percentage.innerText = localize("common.offline"));
+          percentage && (percentage.innerText = this._getStateText("closing"));
+      } else percentage && (percentage.innerText = this._getStateText("offline"));
     }
     this.style.setProperty("--bsc-entity-color", color);
     this.style.setProperty("--bsc-brightness", brightness);
@@ -486,6 +596,88 @@ export class MaterialSliderCard extends LitElement {
       } else {
         this.style.removeProperty("--bsc-opacity");
         this.currentValue = this._state.attributes.current_position ?? 0;
+      }
+
+      this._updateSlider();
+      return;
+    }
+
+    // Number and input_number entity handling - use actual min/max from entity
+    if (this._config.control_type === ControlType.NUMBER || this._config.control_type === ControlType.INPUT_NUMBER) {
+      const entityMin = this._state.attributes?.min ?? 0;
+      const entityMax = this._state.attributes?.max ?? 100;
+      // Set slider min/max to entity's actual range
+      this._config.min = 0;
+      this._config.max = 100;
+
+      if (this._status == "unavailable") {
+        this.currentValue = 0;
+        this.style.setProperty("--bsc-opacity", "0.5");
+      } else {
+        this.style.removeProperty("--bsc-opacity");
+        const value = parseFloat(this._state.state ?? "0");
+        // Normalize to 0-100 percentage for slider position
+        this.currentValue = Math.round(((value - entityMin) / (entityMax - entityMin)) * 100);
+      }
+      this._updateSlider();
+      return;
+    }
+
+    // Fan handling - percentage 0-100
+    if (this._config.control_type === ControlType.FAN) {
+      this._config.min = 0;
+      this._config.max = 100;
+
+      if (this._status == "unavailable") {
+        this.currentValue = 0;
+        this.style.setProperty("--bsc-opacity", "0.5");
+      } else if (this._status !== "on") {
+        this.style.removeProperty("--bsc-opacity");
+        this.currentValue = 0;
+      } else {
+        this.style.removeProperty("--bsc-opacity");
+        this.currentValue = this._state.attributes?.percentage ?? 0;
+      }
+      this._updateSlider();
+      return;
+    }
+
+    // Climate handling - temperature with min/max
+    if (this._config.control_type === ControlType.CLIMATE) {
+      this._config.min = 0;
+      this._config.max = 100;
+
+      if (this._status == "unavailable") {
+        this.currentValue = 0;
+        this.style.setProperty("--bsc-opacity", "0.5");
+      } else {
+        this.style.removeProperty("--bsc-opacity");
+        const minTemp = this._state.attributes?.min_temp ?? 7;
+        const maxTemp = this._state.attributes?.max_temp ?? 35;
+        const temp = this._state.attributes?.temperature ?? minTemp;
+        // Normalize to 0-100 percentage for slider position
+        this.currentValue = Math.round(((temp - minTemp) / (maxTemp - minTemp)) * 100);
+      }
+      this._updateSlider();
+      return;
+    }
+
+    // Media player volume handling
+    if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      this._config.min = 0;
+      this._config.max = 100;
+
+      if (this._status == "unavailable" || this._status == "off") {
+        this.currentValue = 0;
+        if (this._status == "unavailable") {
+          this.style.setProperty("--bsc-opacity", "0.5");
+        } else {
+          this.style.removeProperty("--bsc-opacity");
+        }
+      } else {
+        this.style.removeProperty("--bsc-opacity");
+        const volume = this._state.attributes?.volume_level ?? 0;
+        this.currentValue = Math.round(volume * 100);
       }
 
       this._updateSlider();
@@ -545,6 +737,80 @@ export class MaterialSliderCard extends LitElement {
       this._hass!.callService("cover", "set_cover_position", {
         entity_id: this._state.entity_id,
         position: this.currentValue,
+      });
+      return;
+    }
+
+    // Number entity → set value within min/max range
+    if (this._config.control_type === ControlType.NUMBER) {
+      const min = this._state.attributes?.min ?? 0;
+      const max = this._state.attributes?.max ?? 100;
+      // Convert percentage (0-100) back to actual value
+      const value = min + (this.currentValue / 100) * (max - min);
+      this._hass!.callService("number", "set_value", {
+        entity_id: this._state.entity_id,
+        value: value,
+      });
+      return;
+    }
+
+    // Input number entity → same as number but different service
+    if (this._config.control_type === ControlType.INPUT_NUMBER) {
+      const min = this._state.attributes?.min ?? 0;
+      const max = this._state.attributes?.max ?? 100;
+      // Convert percentage (0-100) back to actual value
+      const value = min + (this.currentValue / 100) * (max - min);
+      this._hass!.callService("input_number", "set_value", {
+        entity_id: this._state.entity_id,
+        value: value,
+      });
+      return;
+    }
+
+    // Fan → set percentage
+    if (this._config.control_type === ControlType.FAN) {
+      if (this.currentValue === 0) {
+        // Turn off fan when slider is at 0
+        this._hass!.callService("fan", "turn_off", {
+          entity_id: this._state.entity_id,
+        });
+      } else {
+        // Set percentage (will also turn on if off)
+        this._hass!.callService("fan", "set_percentage", {
+          entity_id: this._state.entity_id,
+          percentage: this.currentValue,
+        });
+      }
+      return;
+    }
+
+    // Climate → set temperature (turn on first if off)
+    if (this._config.control_type === ControlType.CLIMATE) {
+      const minTemp = this._state.attributes?.min_temp ?? 7;
+      const maxTemp = this._state.attributes?.max_temp ?? 35;
+      // Convert percentage (0-100) back to actual temperature
+      const temperature = minTemp + (this.currentValue / 100) * (maxTemp - minTemp);
+
+      // If climate is off, turn it on first
+      if (this._status === "off") {
+        this._hass!.callService("climate", "turn_on", {
+          entity_id: this._state.entity_id,
+        });
+      }
+
+      this._hass!.callService("climate", "set_temperature", {
+        entity_id: this._state.entity_id,
+        temperature: temperature,
+      });
+      return;
+    }
+
+    // Media player volume → set volume_level (0.0 - 1.0)
+    if (this._config.control_type === ControlType.MEDIA_PLAYER_VOLUME) {
+      const volume = this.currentValue / 100;
+      this._hass!.callService("media_player", "volume_set", {
+        entity_id: this._state.entity_id,
+        volume_level: volume,
       });
       return;
     }
